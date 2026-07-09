@@ -577,12 +577,126 @@ async def get_logs(limit: int = 100):
         logs = session.query(BotLog).order_by(BotLog.timestamp.desc()).limit(limit).all()
         return [l.to_dict() for l in logs]
 
-
 @app.get("/api/signals")
 async def get_signals(limit: int = 50):
+    """Get recent strategy signals (audit trail)."""
     with db_session(state.db_factory) as session:
         sigs = session.query(SignalHistory).order_by(SignalHistory.timestamp.desc()).limit(limit).all()
         return [s.to_dict() for s in sigs]
+
+
+# ──────────────────────────────────────────────
+#  Alerts API
+# ──────────────────────────────────────────────
+
+@app.get("/api/alerts")
+async def get_alerts(limit: int = 20, unacknowledged: bool = False):
+    """Get recent alerts."""
+    try:
+        from notifications.alerts import AlertManager
+        mgr = AlertManager(state.db_factory)
+        return mgr.get_recent_alerts(limit=limit, unacknowledged_only=unacknowledged)
+    except Exception as e:
+        logger.error("get_alerts: %s", e)
+        return []
+
+
+@app.post("/api/alerts/{alert_id}/acknowledge")
+async def acknowledge_alert(alert_id: int):
+    """Acknowledge an alert."""
+    try:
+        from notifications.alerts import AlertManager
+        mgr = AlertManager(state.db_factory)
+        success = mgr.acknowledge_alert(alert_id)
+        if success:
+            return {"status": "ok", "id": alert_id}
+        raise HTTPException(404, "Alert not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@app.post("/api/alerts/acknowledge-all")
+async def acknowledge_all_alerts():
+    """Acknowledge all unacknowledged alerts."""
+    try:
+        from notifications.alerts import AlertManager
+        mgr = AlertManager(state.db_factory)
+        count = mgr.acknowledge_all()
+        return {"status": "ok", "acknowledged": count}
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+# ──────────────────────────────────────────────
+#  Analytics API
+# ──────────────────────────────────────────────
+
+@app.get("/api/analytics/performance")
+async def get_analytics_performance():
+    """Get daily and monthly performance summaries."""
+    try:
+        from analytics.performance import PerformanceAnalyzer
+        analyzer = PerformanceAnalyzer(state.db_factory)
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        daily = analyzer.daily_performance(today)
+        monthly = analyzer.monthly_performance(
+            datetime.now(timezone.utc).year,
+            datetime.now(timezone.utc).month,
+        )
+        return {"daily": daily, "monthly": monthly}
+    except Exception as e:
+        logger.error("analytics/performance: %s", e)
+        return {"daily": {}, "monthly": {}, "error": str(e)}
+
+
+@app.get("/api/analytics/equity-curve")
+async def get_analytics_equity_curve():
+    """Get equity curve data."""
+    try:
+        from analytics.performance import PerformanceAnalyzer
+        analyzer = PerformanceAnalyzer(state.db_factory)
+        from datetime import timedelta
+        end = datetime.now(timezone.utc)
+        start = end - timedelta(days=30)
+        curve = analyzer.equity_curve(start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"))
+        return {"curve": curve}
+    except Exception as e:
+        logger.error("analytics/equity-curve: %s", e)
+        return {"curve": [], "error": str(e)}
+
+
+@app.get("/api/analytics/distribution")
+async def get_analytics_distribution():
+    """Get trade distribution by hour, day, exit reason, score."""
+    try:
+        from analytics.performance import PerformanceAnalyzer
+        analyzer = PerformanceAnalyzer(state.db_factory)
+        with db_session(state.db_factory) as session:
+            from core.models import Trade
+            trades = session.query(Trade).filter(Trade.status == "CLOSED").all()
+            dist = analyzer.trade_distribution([t.to_dict() for t in trades])
+        return dist
+    except Exception as e:
+        logger.error("analytics/distribution: %s", e)
+        return {"error": str(e)}
+
+
+@app.get("/api/analytics/signal-score")
+async def get_analytics_signal_score():
+    """Get current signal score with weighted scoring."""
+    try:
+        from analytics.scoring import SignalScorer
+        scorer = SignalScorer()
+        if state.latest_snapshot and state.latest_confluence:
+            score = scorer.score_signal(state.latest_snapshot, state.latest_confluence)
+            regime = scorer.get_market_regime(state.latest_snapshot)
+            return {**score, "market_regime": regime}
+        return {"total_score": 0, "recommendation": "skip", "market_regime": "unknown"}
+    except Exception as e:
+        logger.error("analytics/signal-score: %s", e)
+        return {"total_score": 0, "recommendation": "skip", "error": str(e)}
 
 
 # ──────────────────────────────────────────────

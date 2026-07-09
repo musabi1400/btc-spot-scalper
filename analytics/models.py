@@ -76,7 +76,7 @@ class TradeAnalytics(Base):
     __tablename__ = "trade_analytics"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    trade_id = Column(Integer, ForeignKey("trades.id"), nullable=True, index=True)
+    trade_id = Column(Integer, ForeignKey("trades.id"), nullable=True)
 
     entry_time = Column(DateTime, nullable=True)
     exit_time = Column(DateTime, nullable=True)

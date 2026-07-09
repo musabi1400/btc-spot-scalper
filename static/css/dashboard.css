@@ -81,3 +81,58 @@
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+/* ─── Phase 3: Analytics & Alerts ─── */
+
+/* CSS bar chart */
+.css-bar-track {
+    background: #0a0e17;
+    border-radius: 4px;
+    overflow: hidden;
+    height: 14px;
+    width: 100%;
+}
+.css-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+
+/* Win/loss donut (CSS conic-gradient) */
+.winloss-donut {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: relative;
+}
+.winloss-donut::after {
+    content: '';
+    position: absolute;
+    top: 22%;
+    left: 22%;
+    width: 56%;
+    height: 56%;
+    background: #111827;
+    border-radius: 50%;
+}
+
+/* Alert level colours */
+.alert-INFO {
+    border-left: 3px solid #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
+}
+.alert-WARN {
+    border-left: 3px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+}
+.alert-ERROR {
+    border-left: 3px solid #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+.alert-CRITICAL {
+    border-left: 3px solid #7f1d1d;
+    background: rgba(127, 29, 29, 0.18);
+}
+.alert-acknowledged {
+    opacity: 0.5;
+}

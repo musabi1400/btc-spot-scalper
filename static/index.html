@@ -302,6 +302,71 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- ─── Phase 3: Analytics & Alerts Sections ─── -->
+    <!-- ═══════════════════════════════════════════ -->
+
+    <!-- ─── Row 6: Daily / Monthly Performance ─── -->
+    <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+        <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">📅 Daily / Monthly Performance</h2>
+        <div id="performancePanel">
+            <div class="text-center py-6 text-gray-600 text-sm">Loading performance analytics...</div>
+        </div>
+    </div>
+
+    <!-- ─── Row 7: Equity Curve ─── -->
+    <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+        <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">📈 Equity Curve (Cumulative PnL)</h2>
+        <div class="relative">
+            <canvas id="equityCurveCanvas" width="1200" height="320" class="w-full bg-scalper-dark rounded-lg border border-scalper-border"></canvas>
+            <div id="equityCurveStatus" class="absolute inset-0 flex items-center justify-center text-gray-600 text-sm pointer-events-none">Loading equity curve...</div>
+        </div>
+    </div>
+
+    <!-- ─── Row 8: Trade Distribution ─── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Trades by hour -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+            <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">⏰ Trades by Hour</h2>
+            <div id="distByHour" class="space-y-1">
+                <div class="text-gray-600 text-sm">Loading...</div>
+            </div>
+        </div>
+        <!-- Trades by exit reason -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+            <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">🚪 Trades by Exit Reason</h2>
+            <div id="distByExit" class="space-y-1">
+                <div class="text-gray-600 text-sm">Loading...</div>
+            </div>
+        </div>
+        <!-- Win/loss donut -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+            <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">🍩 Win / Loss Ratio</h2>
+            <div id="distWinLoss" class="flex flex-col items-center">
+                <div class="text-gray-600 text-sm">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Row 9: Signal Score Display ─── -->
+    <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+        <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">🎯 Signal Score</h2>
+        <div id="signalScorePanel">
+            <div class="text-center py-6 text-gray-600 text-sm">Loading signal score...</div>
+        </div>
+    </div>
+
+    <!-- ─── Row 10: Alerts Panel ─── -->
+    <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+        <div class="flex items-center justify-between border-b border-scalper-border pb-2 mb-4">
+            <h2 class="text-sm font-bold text-white">🔔 Recent Alerts</h2>
+            <button id="refreshAlertsBtn" class="text-xs text-scalper-blue hover:text-blue-400">↻ Refresh</button>
+        </div>
+        <div id="alertsPanel" class="space-y-2 max-h-96 overflow-y-auto">
+            <div class="text-gray-600 text-sm">Loading alerts...</div>
+        </div>
+    </div>
+
     <!-- Emergency Stop Modal -->
     <div id="emergencyModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
         <div class="bg-scalper-card border border-scalper-red rounded-xl p-6 max-w-md mx-4">
