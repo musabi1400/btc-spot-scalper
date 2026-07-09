@@ -1,0 +1,83 @@
+/* dashboard.css — supplemental styles for the BTC Scalper UI */
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0a0e17;
+}
+::-webkit-scrollbar-thumb {
+    background: #1f2937;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #374151;
+}
+
+/* Mode toggle active states */
+.mode-active {
+    background: #3b82f6;
+    color: white;
+}
+.mode-inactive {
+    background: transparent;
+    color: #6b7280;
+}
+
+/* Auto-trade toggle states */
+.auto-trade-on {
+    background: #10b981;
+}
+.auto-trade-on .knob {
+    transform: translateX(24px);
+    background: white;
+}
+
+/* Bot state dot colors */
+.dot-searching {
+    background: #f59e0b;
+    animation: pulse 1.5s infinite;
+}
+.dot-in-trade {
+    background: #10b981;
+    animation: pulse 1s infinite;
+}
+.dot-halted {
+    background: #ef4444;
+}
+.dot-stopped {
+    background: #6b7280;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* Trade row colouring */
+.trade-row-win {
+    border-left: 2px solid #10b981;
+}
+.trade-row-loss {
+    border-left: 2px solid #ef4444;
+}
+.trade-row-open {
+    border-left: 2px solid #3b82f6;
+}
+
+/* Log level colours */
+.log-INFO { color: #9ca3af; }
+.log-WARN { color: #f59e0b; }
+.log-ERROR { color: #ef4444; }
+.log-TRADE { color: #10b981; }
+
+/* Smooth fade-in for new elements */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

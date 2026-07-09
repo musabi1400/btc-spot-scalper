@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC Spot Scalper — Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'scalper-dark': '#0a0e17',
+                        'scalper-card': '#111827',
+                        'scalper-border': '#1f2937',
+                        'scalper-green': '#10b981',
+                        'scalper-red': '#ef4444',
+                        'scalper-yellow': '#f59e0b',
+                        'scalper-blue': '#3b82f6',
+                    },
+                    fontFamily: {
+                        'mono': ['JetBrains Mono', 'Courier New', 'monospace'],
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body class="bg-scalper-dark text-gray-300 min-h-screen font-mono">
+
+<!-- ─── Header ─── -->
+<header class="border-b border-scalper-border bg-scalper-card sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-scalper-yellow to-scalper-orange rounded-lg flex items-center justify-center text-xl font-bold">
+                ₿
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-white">BTC Spot Scalper</h1>
+                <p class="text-xs text-gray-500">No Leverage • Maker Only • Binance Spot</p>
+            </div>
+        </div>
+
+        <!-- Mode toggle -->
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center bg-scalper-dark rounded-lg p-1 border border-scalper-border">
+                <button id="modeDemo" class="px-3 py-1.5 text-xs font-bold rounded-md transition-all">
+                    DEMO
+                </button>
+                <button id="modeLive" class="px-3 py-1.5 text-xs font-bold rounded-md transition-all">
+                    LIVE
+                </button>
+            </div>
+
+            <!-- Bot state indicator -->
+            <div id="botStateBadge" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg border border-scalper-border">
+                <div id="botStateDot" class="w-2.5 h-2.5 rounded-full bg-gray-500"></div>
+                <span id="botStateText" class="text-xs font-bold">STOPPED</span>
+            </div>
+
+            <!-- Emergency stop -->
+            <button id="emergencyStopBtn" class="px-4 py-2 bg-scalper-red hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-all transform hover:scale-105 active:scale-95">
+                ⛔ EMERGENCY STOP
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- ─── Row 1: Status Cards ─── -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+        <!-- Balance: USDT -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-4">
+            <div class="text-xs text-gray-500 mb-1">USDT Balance</div>
+            <div id="usdtBalance" class="text-2xl font-bold text-scalper-green">$0.00</div>
+            <div class="text-xs text-gray-600 mt-1">Free: <span id="usdtFree">$0</span></div>
+        </div>
+
+        <!-- Balance: BTC -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-4">
+            <div class="text-xs text-gray-500 mb-1">BTC Balance</div>
+            <div id="btcBalance" class="text-2xl font-bold text-scalper-yellow">₿0.00000000</div>
+            <div class="text-xs text-gray-600 mt-1">Free: <span id="btcFree">₿0</span></div>
+        </div>
+
+        <!-- Current Price -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-4">
+            <div class="text-xs text-gray-500 mb-1">BTC/USDT Price</div>
+            <div id="currentPrice" class="text-2xl font-bold text-white">$--</div>
+            <div class="text-xs text-gray-600 mt-1">5m timeframe</div>
+        </div>
+
+        <!-- Win Rate -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-4">
+            <div class="text-xs text-gray-500 mb-1">Win Rate</div>
+            <div id="winRate" class="text-2xl font-bold text-scalper-blue">0%</div>
+            <div class="text-xs text-gray-600 mt-1"><span id="totalTrades">0</span> trades</div>
+        </div>
+    </div>
+
+    <!-- ─── Row 2: Controls + Indicators ─── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left: Settings panel -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-5 space-y-4">
+            <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2">⚙️ Configuration</h2>
+
+            <!-- Credentials -->
+            <div class="space-y-2">
+                <label class="text-xs text-gray-500">Binance API Key</label>
+                <input id="apiKeyInput" type="password" placeholder="Enter API key..." class="w-full bg-scalper-dark border border-scalper-border rounded-lg px-3 py-2 text-xs text-white focus:border-scalper-blue outline-none">
+                <label class="text-xs text-gray-500">Binance API Secret</label>
+                <input id="apiSecretInput" type="password" placeholder="Enter API secret..." class="w-full bg-scalper-dark border border-scalper-border rounded-lg px-3 py-2 text-xs text-white focus:border-scalper-blue outline-none">
+                <button id="saveCredentialsBtn" class="w-full bg-scalper-blue hover:bg-blue-600 text-white text-xs font-bold py-2 rounded-lg transition">
+                    Save Credentials
+                </button>
+                <div id="credStatus" class="text-xs text-gray-600 text-center"></div>
+            </div>
+
+            <hr class="border-scalper-border">
+
+            <!-- Auto-trade toggle -->
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold">Auto-Trading</span>
+                <button id="autoTradeToggle" class="relative w-12 h-6 bg-gray-700 rounded-full transition-all">
+                    <div id="autoTradeKnob" class="absolute left-0.5 top-0.5 w-5 h-5 bg-gray-400 rounded-full transition-all"></div>
+                </button>
+            </div>
+
+            <hr class="border-scalper-border">
+
+            <!-- Risk status -->
+            <div class="space-y-2">
+                <h3 class="text-xs font-bold text-white">🛡️ Risk Manager</h3>
+                <div class="flex justify-between text-xs">
+                    <span class="text-gray-500">Daily Losses:</span>
+                    <span id="dailyLosses" class="font-bold">0 / 3</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-gray-500">Trades Today:</span>
+                    <span id="tradesToday" class="font-bold">0</span>
+                </div>
+                <div class="flex justify-between text-xs">
+                    <span class="text-gray-500">Circuit Breaker:</span>
+                    <span id="circuitBreaker" class="font-bold text-scalper-green">ARMED</span>
+                </div>
+                <div id="haltInfo" class="hidden text-xs text-scalper-red bg-red-950 rounded p-2 mt-2"></div>
+            </div>
+        </div>
+
+        <!-- Center+Right: Live Indicators -->
+        <div class="lg:col-span-2 bg-scalper-card border border-scalper-border rounded-xl p-5">
+            <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">📊 Live Indicators (5m)</h2>
+
+            <!-- Price + EMAs -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">VWAP</div>
+                    <div id="indVwap" class="text-sm font-bold text-white">$--</div>
+                </div>
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">EMA 9</div>
+                    <div id="indEma9" class="text-sm font-bold text-scalper-blue">$--</div>
+                </div>
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">EMA 21</div>
+                    <div id="indEma21" class="text-sm font-bold text-scalper-yellow">$--</div>
+                </div>
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">EMA 50</div>
+                    <div id="indEma50" class="text-sm font-bold text-scalper-red">$--</div>
+                </div>
+            </div>
+
+            <!-- Volume + RSI -->
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">Volume Ratio</div>
+                    <div id="indVolRatio" class="text-sm font-bold">--×</div>
+                    <div class="text-xs text-gray-600">thr: 1.5×</div>
+                </div>
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">RSI (14)</div>
+                    <div id="indRsi" class="text-sm font-bold">--</div>
+                    <div class="text-xs text-gray-600">zone: 40-60</div>
+                </div>
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">15m Trend</div>
+                    <div id="indTrend15m" class="text-sm font-bold">--</div>
+                </div>
+            </div>
+
+            <!-- Confluence checklist -->
+            <div class="border-t border-scalper-border pt-4">
+                <h3 class="text-xs font-bold text-white mb-3">Confluence Checklist <span id="confluenceScore" class="text-scalper-blue ml-2">0/5</span></h3>
+                <div class="grid grid-cols-1 gap-2">
+                    <div class="flex items-center justify-between text-xs">
+                        <span>C1: Bullish Trend (Price > EMA21 > EMA50) <span class="text-gray-600">[MANDATORY]</span></span>
+                        <span id="cond1" class="font-bold">⚪</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span>C2: VWAP Position (above or retest bounce)</span>
+                        <span id="cond2" class="font-bold">⚪</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span>C3: Volume Spike (> 1.5× SMA20)</span>
+                        <span id="cond3" class="font-bold">⚪</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span>C4: RSI in Zone (40-60)</span>
+                        <span id="cond4" class="font-bold">⚪</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span>C5: Order Book Bid Wall (0.1%-0.3% below)</span>
+                        <span id="cond5" class="font-bold">⚪</span>
+                    </div>
+                </div>
+                <div id="confluenceReason" class="mt-3 text-xs text-gray-500 italic"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Row 3: Active Trade + Performance ─── -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Active Trade -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+            <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">🎯 Active Position</h2>
+            <div id="activeTradePanel">
+                <div class="text-center py-8 text-gray-600 text-sm">
+                    No active position
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+            <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">📈 Performance Metrics</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">Total Net Profit</div>
+                    <div id="metricNetProfit" class="text-lg font-bold text-scalper-green">$0.00</div>
+                </div>
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">Profit Factor</div>
+                    <div id="metricProfitFactor" class="text-lg font-bold text-scalper-blue">0.00</div>
+                </div>
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">Avg Win</div>
+                    <div id="metricAvgWin" class="text-lg font-bold text-scalper-green">$0.00</div>
+                </div>
+                <div class="bg-scalper-dark rounded-lg p-3">
+                    <div class="text-xs text-gray-600">Avg Loss</div>
+                    <div id="metricAvgLoss" class="text-lg font-bold text-scalper-red">$0.00</div>
+                </div>
+                <div class="bg-scalper-dark rounded-lg p-3 col-span-2">
+                    <div class="text-xs text-gray-600">Total Fees Paid</div>
+                    <div id="metricTotalFees" class="text-lg font-bold text-scalper-yellow">$0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Row 4: Trading Journal ─── -->
+    <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+        <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">📋 Trading Journal</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="text-gray-500 border-b border-scalper-border">
+                        <th class="text-left py-2 px-2">#</th>
+                        <th class="text-left py-2 px-2">Status</th>
+                        <th class="text-right py-2 px-2">Entry Price</th>
+                        <th class="text-right py-2 px-2">Exit Price</th>
+                        <th class="text-right py-2 px-2">Qty (BTC)</th>
+                        <th class="text-right py-2 px-2">SL</th>
+                        <th class="text-right py-2 px-2">TP</th>
+                        <th class="text-right py-2 px-2">Fees</th>
+                        <th class="text-right py-2 px-2">Net PnL</th>
+                        <th class="text-right py-2 px-2">Return %</th>
+                        <th class="text-center py-2 px-2">Score</th>
+                        <th class="text-left py-2 px-2">Exit Reason</th>
+                        <th class="text-left py-2 px-2">Time</th>
+                    </tr>
+                </thead>
+                <tbody id="tradesTableBody">
+                    <tr><td colspan="13" class="text-center py-6 text-gray-600">No trades yet</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ─── Row 5: Live Logs ─── -->
+    <div class="bg-scalper-card border border-scalper-border rounded-xl p-5">
+        <h2 class="text-sm font-bold text-white border-b border-scalper-border pb-2 mb-4">📡 Live Logs</h2>
+        <div id="logFeed" class="space-y-1 max-h-64 overflow-y-auto text-xs">
+            <div class="text-gray-600">Waiting for logs...</div>
+        </div>
+    </div>
+
+    <!-- Emergency Stop Modal -->
+    <div id="emergencyModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+        <div class="bg-scalper-card border border-scalper-red rounded-xl p-6 max-w-md mx-4">
+            <h2 class="text-lg font-bold text-scalper-red mb-3">⚠️ EMERGENCY STOP</h2>
+            <p class="text-sm text-gray-400 mb-5">
+                This will immediately:
+                <br>• Cancel ALL open orders
+                <br>• Sell ALL BTC at market-adjacent price
+                <br>• Stop the bot completely
+                <br><br>
+                <span class="text-scalper-red font-bold">This action cannot be undone.</span>
+            </p>
+            <div class="flex space-x-3">
+                <button id="emergencyCancel" class="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold rounded-lg">
+                    Cancel
+                </button>
+                <button id="emergencyConfirm" class="flex-1 py-2 bg-scalper-red hover:bg-red-600 text-white text-sm font-bold rounded-lg">
+                    CONFIRM EMERGENCY STOP
+                </button>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>

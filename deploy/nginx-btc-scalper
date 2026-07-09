@@ -1,0 +1,85 @@
+# /etc/nginx/sites-available/btc-scalper
+# ──────────────────────────────────────────────
+# Nginx reverse proxy for the BTC Spot Scalper.
+#
+# Install:
+#   sudo cp deploy/nginx-btc-scalper /etc/nginx/sites-available/btc-scalper
+#   sudo ln -s /etc/nginx/sites-available/btc-scalper /etc/nginx/sites-enabled/
+#   sudo nginx -t
+#   sudo systemctl reload nginx
+#
+# For HTTPS, add Certbot:
+#   sudo certbot --nginx -d scalper.yourdomain.com
+
+# ── Upstream (Uvicorn) ──
+upstream btc_scalper_backend {
+    server 127.0.0.1:8000;
+}
+
+# ── HTTP → HTTPS redirect (uncomment after Certbot setup) ──
+# server {
+#     listen 80;
+#     server_name scalper.yourdomain.com;
+#     return 301 https://$host$request_uri;
+# }
+
+# ── Main server block ──
+server {
+    listen 80;
+    # listen 443 ssl;                          # Uncomment for HTTPS
+    # ssl_certificate /etc/letsencrypt/live/scalper.yourdomain.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/scalper.yourdomain.com/privkey.pem;
+
+    server_name scalper.yourdomain.com;        # Replace with your domain or IP
+
+    # ── Security headers ──
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # ── Client body size ──
+    client_max_body_size 10m;
+
+    # ── Static files (served directly by Nginx for performance) ──
+    location /static/ {
+        alias /opt/btc-scalper/static/;
+        expires 1h;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # ── WebSocket endpoint ──
+    location /ws {
+        proxy_pass http://btc_scalper_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # ── WebSocket timeouts ──
+        proxy_read_timeout 86400s;
+        proxy_send_timeout 86400s;
+    }
+
+    # ── API + main routes ──
+    location / {
+        proxy_pass http://btc_scalper_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # ── Timeouts ──
+        proxy_connect_timeout 30s;
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+
+    # ── Access logs ──
+    access_log /var/log/nginx/btc-scalper_access.log;
+    error_log  /var/log/nginx/btc-scalper_error.log;
+}

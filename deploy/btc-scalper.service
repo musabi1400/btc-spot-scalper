@@ -1,0 +1,65 @@
+# /etc/systemd/system/btc-scalper.service
+# ──────────────────────────────────────────────
+# Systemd unit file for the BTC Spot Scalper application.
+#
+# Install:
+#   sudo cp deploy/btc-scalper.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable btc-scalper
+#   sudo systemctl start btc-scalper
+#
+# Logs:
+#   journalctl -u btc-scalper -f
+#
+# Status:
+#   sudo systemctl status btc-scalper
+
+[Unit]
+Description=BTC Spot Scalper — Automated Trading Bot
+Documentation=https://github.com/your-repo/btc-scalper
+After=network.target postgresql.service
+Wants=network.target
+
+[Service]
+# ── User / Group ──
+User=www-data
+Group=www-data
+
+# ── Working directory ──
+WorkingDirectory=/opt/btc-scalper
+
+# ── Environment ──
+EnvironmentFile=/opt/btc-scalper/.env
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/opt/btc-scalper
+
+# ── Virtualenv ──
+ExecStart=/opt/btc-scalper/venv/bin/uvicorn main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 1 \
+    --ws-ping-interval 20 \
+    --ws-ping-timeout 60 \
+    --log-level info
+
+# ── Process management ──
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# ── Security hardening ──
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/btc-scalper
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+# ── Resource limits ──
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
