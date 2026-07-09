@@ -1,0 +1,1 @@
+"""notifications package — alerts and notifications for important events."""
