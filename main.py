@@ -700,6 +700,76 @@ async def get_analytics_signal_score():
 
 
 # ──────────────────────────────────────────────
+#  Monitoring / Health API
+# ──────────────────────────────────────────────
+
+@app.get("/health")
+async def health_check():
+    """System health check endpoint."""
+    try:
+        from monitoring.health import HealthChecker
+        checker = HealthChecker(state.db_factory)
+        health = checker.run_all(
+            strategy=state.strategy,
+            execution=state.execution,
+            risk_manager=state.risk,
+        )
+        status_code = 200 if health.status == "healthy" else 503
+        from fastapi import Response
+        return Response(
+            content=json.dumps(health.to_dict()),
+            media_type="application/json",
+            status_code=status_code,
+        )
+    except Exception as e:
+        logger.error("Health check failed: %s", e)
+        from fastapi import Response
+        return Response(
+            content=json.dumps({"status": "unhealthy", "error": str(e)}),
+            media_type="application/json",
+            status_code=503,
+        )
+
+@app.get("/api/monitoring/health")
+async def get_monitoring_health():
+    """Get detailed health status (alias for /health with more info)."""
+    try:
+        from monitoring.health import HealthChecker
+        checker = HealthChecker(state.db_factory)
+        return checker.run_all(
+            strategy=state.strategy,
+            execution=state.execution,
+            risk_manager=state.risk,
+        ).to_dict()
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
+
+@app.get("/api/monitoring/watchdog")
+async def get_watchdog_status():
+    """Get watchdog status."""
+    try:
+        if hasattr(state, 'watchdog') and state.watchdog:
+            return state.watchdog.get_status()
+        return {"running": False, "message": "Watchdog not initialised"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/monitoring/resources")
+async def get_resource_usage():
+    """Get current resource usage summary."""
+    try:
+        from monitoring.resource_monitor import ResourceMonitor
+        monitor = getattr(state, 'resource_monitor', None)
+        if not monitor:
+            monitor = ResourceMonitor()
+            state.resource_monitor = monitor
+        monitor.sample()
+        return monitor.get_summary()
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ──────────────────────────────────────────────
 #  WebSocket
 # ──────────────────────────────────────────────
 

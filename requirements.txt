@@ -21,6 +21,9 @@ SQLAlchemy==2.0.36
 # ── Security / Encryption ──
 cryptography==44.0.0
 
+# ── System monitoring ──
+psutil==6.1.1
+
 # ── Pydantic (ships with FastAPI but pin for stability) ──
 pydantic==2.10.4
 
