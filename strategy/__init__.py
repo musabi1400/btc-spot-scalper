@@ -1,0 +1,1 @@
+"""strategy package — strategy engine and indicator calculations."""

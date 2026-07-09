@@ -32,6 +32,11 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
+
+# Test cache
+.pytest_cache/
+__pycache__/
 
 # Certificates
 *.pem

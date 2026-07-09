@@ -1,0 +1,1 @@
+"""core package — central configuration, models, exceptions, and logging."""

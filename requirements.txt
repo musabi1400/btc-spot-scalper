@@ -23,3 +23,7 @@ cryptography==44.0.0
 
 # ── Pydantic (ships with FastAPI but pin for stability) ──
 pydantic==2.10.4
+
+# ── Testing (dev only) ──
+pytest==8.3.4
+pytest-asyncio==0.25.0

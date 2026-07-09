@@ -1,0 +1,1 @@
+"""tests package — unit tests for BTC Scalper."""
