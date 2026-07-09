@@ -1,0 +1,1 @@
+"""paper_trading package — simulated trading engine for testing."""
